@@ -29,6 +29,8 @@ import networkx
 import random
 import re
 
+import time
+
 from scipy.stats import geom
 from scipy.stats import lognorm
 from scipy.stats import uniform
@@ -215,7 +217,12 @@ class GetDistribution():
             pass
     def next(self):
         return self.func.rvs(*self.params)
-
+    
+    def expectation(self):
+        print "###" + str(self.func)
+        # a = self.func.expect(self.func, args=(2.245,),loc=1.133)
+        # print "***"+ str(a)
+        return 0
 #TODO: generalize this process
 class SelectSequences():
     def  __init__(self, filename):
@@ -234,7 +241,7 @@ class SelectSequences():
 
     def publish_callback(self, **params): #TODO: solve PARAMS!!!
         c = select_content.next(**params)
-        return c, filesizes[c]
+        return filesizes[c]
     def retrieve_callback(self, **params):
         return tuple(social_graph.neighbors(u))
     def publishcontent_callback(self, **params):
@@ -280,18 +287,21 @@ if __name__ == '__main__':
     a = GetDistribution('InterSessionTime')
     inter_arrival = GetDistribution('InterActivityTime')
     a.next()
+    a.expectation()
     number_sessions = GetDistribution('SessionsPerUser')
-
+    start = time.clock()
     for u in users:
         time_elapsed = 0
+        start1 = time.clock()
         for _ in range(number_sessions.next()):
             inter_session_time = a.next()
             session = int(session_period.next())
 
             
             i = 0
+            start3 = time.clock()
             while i < session:
-                    
+
                 if not actions.has_key(u):
                     actions[u] = SelectSequences(config.get('MarkovChain', 'file'))
                 next_activity_time = inter_arrival.next()
@@ -301,8 +311,15 @@ if __name__ == '__main__':
                 if inter_session_time + time_elapsed > TIME_LIMIT:
                     break
                 if not COMMUNITIES_ENABLED:
-                    print "%.4f\t%s\t%s\t%s"%(inter_session_time+time_elapsed, action, u, actions[u].callback(action, content=select_content))
+                    if action == "Retrieve":
+                        print "%.4f\t%s\t%s\t%s"%(inter_session_time+time_elapsed, action, u, "1")
+                    else:
+                        print "%.4f\t%s\t%s\t%s"%(inter_session_time+time_elapsed, action, u, actions[u].callback(action, content=select_content, community_index=u%NUMBER_OF_COMMUNITIES))
                 else:
-                    print "%.4f\t%s\t%s\t%s"%(inter_session_time+time_elapsed, action, u, actions[u].callback(action, content=select_content, community_index=u%NUMBER_OF_COMMUNITIES))
+                    if action == "Retrieve":
+                        print "%.4f\t%s\t%s\t%s"%(inter_session_time+time_elapsed, action, u, "1")
+                    else:
+                        print "%.4f\t%s\t%s\t%s"%(inter_session_time+time_elapsed, action, u, actions[u].callback(action, content=select_content, community_index=u%NUMBER_OF_COMMUNITIES))
 
                 i+=1
+    

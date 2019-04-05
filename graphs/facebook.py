@@ -56,10 +56,20 @@ def generate_facebook_graph(filename):
     
 #generate_facebook_graph('facebook.gml')
 
-GG = networkx.read_gml('graphs/facebook.gml')
+# GG = networkx.read_gml('graphs/facebook.gml')
 
 G=networkx.Graph()
-for n,nbrs in GG.adjacency_iter():
-   for nbr,edict in nbrs.items():
-       G.add_edge(n,nbr)
+# for n,nbrs in GG.adjacency_iter():
+#    for nbr,edict in nbrs.items():
+#        G.add_edge(n,nbr)
+with open('graphs/test.txt') as  f1:
+    f11 = f1.readlines()
+
+for x in f11:
+    x = x.strip("\n")
+    person1, person2 = x.split(" ")
+    person1 = int(person1)
+    person2 = int(person2)
+    G.add_edge(person1, person2)
+
 
